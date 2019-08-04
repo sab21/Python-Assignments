@@ -1,0 +1,91 @@
+  # -*- coding: utf-8 -*-
+"""
+Created on Sun Aug  4 17:21:22 2019
+
+@author: Sabie
+"""
+
+# =============================================================================
+# List Assignment
+# 1. Create a list with the name Newlist that will contain the following values –
+# Rakesh, 18.9, 23, Mahesh, 356, 26.8
+# 2. Create a nested list with the name PersonDetails and values –
+# Mike, (1984, 2017), Jay, (1979, 2017)
+# 3. Access the following values of the corresponding lists –
+# i. 3rd value of Newlist.
+# ii. 4th value’s 2nd element of PersonDetails list.
+# iii. 2nd value from the last of Newlist
+# 4. Create a list my_list containing all the alphabets of ILOVEPYTHON as individual element. And perform the following task:
+# i. access the elements 3rd to 5th
+# ii. access the elements beginning to 4th
+# iii. access the elements 6th to end
+# iv. access the elements beginning to end
+# v. Repeat the list 4 times and save it with a name my_newlist and find the length of my_newlist
+# vi. Find the position of “P” in my_list.
+# 5. Create a list evenno containing the values (2,4,7,8,10) and oddno containing the value (1,2,4,6,9) and perform the following task:
+# i. change the 3rd item of evenno to 6
+# ii. change 2nd to 4th elements of oddno to (3,5,7)
+# iii. add both the list
+# iv. Remove 2nd to 4th element in the list evenno
+# v. Insert the value (12,14,16) into evenno list
+# =============================================================================
+
+#1
+Newlist=["Rakesh", 18.9, 23, "Mahesh", 356, 26.8]
+
+#2
+PersonDetails=[["Mike",1984, 2017],["Jay",1979, 2017]]
+
+#Mike=[1984,2017]
+#Jay=[1979,2017]
+#PersonalDet=[Mike,Jay]
+
+#3
+#i
+print(Newlist[2])
+#ii
+print(PersonDetails[1][2])
+#iii
+print(Newlist[-2])
+
+#4
+my_list=["I","L","O",'V','E','P','Y','T','H','O',"N"]
+#i
+print(my_list[2:5])
+#ii
+print(my_list[:4])
+#iii
+print(my_list[5:])
+#iv
+print(my_list[:])
+#v
+my_newlist=my_list*4
+print(my_newlist)
+print(len(my_newlist))
+#vi
+my_list.index("P")
+
+
+#5
+evenno=[2,4,7,8,10]
+oddno=[1,2,4,6,9]
+
+#i
+evenno[2]=6
+print(evenno)
+
+#ii
+oddno[1:4]=[3,5,7]
+print(oddno)
+
+#iii
+sumno=evenno+oddno
+print(sumno)
+
+#iv
+evenno[1:4]=[]
+print(evenno)
+
+#v
+evenno=evenno + [12,14,16]
+print(evenno)
