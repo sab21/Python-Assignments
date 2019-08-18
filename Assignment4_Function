@@ -1,0 +1,82 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Wed Aug 14 01:59:45 2019
+
+@author: Sabie
+"""
+
+# =============================================================================
+# Write a User defined Function:
+# 1. To accept two numbers X and Y and find the sum of it.
+def sum_of_two_nos(x,y):
+    add=x+y
+    return print("The Sum of ",x," and ",y," is ",add);
+sum_of_two_nos(4,-6)
+
+# 2. To solve the equation f(x) = ax2 + bx + c. By passing x value and a = 2, b = 4 and c = 9.
+
+def solve_quadratic_fn(x,a=2,b=4,c=9):
+    f=a*x*x+b*x+c
+    return (f);
+solve_quadratic_fn(3)
+
+# 3. To pass three arguments Principal, Rate of Interest & Time and calculate the Simple Interest.
+def simple_interest(p,r,t):
+    i=p*r*t/100
+    return i;
+simple_interest(100,10,2)
+
+# 4. To calculate the square root of a number.
+def square_root(num):
+    r=1
+    if (num<0): print("Cant find square root of negative number")
+    elif(num==0):return(0)
+    else:
+        while(r*r<=num):
+            r=r+.00001
+        return (round(r,3));
+    return();
+    
+square_root(int(input("Enter an integer:")))
+
+# 5. To find final amount that needs to be paid by customer based on given quantity and price. 
+#       Add GST 18% and subtract discount of 12% to get final amount. 
+def payable_amount(price,GST=18,discount=12):
+    total=price-price*discount/100
+    total=total+total*GST/100
+    return (total);
+payable_amount(100)
+    
+#6. To returns the square of the sum of two numbers X and Y i.e. (X+Y)2 Hint: (X+Y) 2 = (X2 + 2*X*Y + Y2) 
+def q6(x,y):
+    result=(x+y)*(x+y)
+    return result;
+q6(1,2)
+
+#7. To returns the square of the sum of two numbers X and Y i.e. (X+Y)2, where default value of the second argument(Y) is 2.
+def q7(x,y=2):
+    result=(x+y)*(x+y)
+    return result;
+q7(1)
+
+# 8. To convert first and last character of given name into lowercase and rest should be in uppercase.
+def capitalize_1st_last(char):
+    char=char[0].upper()+char[1:-1].lower()+char[-1].upper()
+    return char;
+
+capitalize_1st_last("sasasbyasasasadSSSll")
+
+# 9. To get h in a right angled triangle, where default value of p and b are 3 and 4 respectively.
+def hypotenuse(p=3,b=4):
+    import math as m
+    h=m.sqrt(p*p+b*b)
+    return h;
+hypotenuse()
+
+# 10. To pass an argument containing a word and returning the word by adding ‘ing’ at the end.
+def q10(word,suffix="ing"):
+    return (word+suffix);
+
+q10("row")
+
+# =============================================================================
