@@ -1,0 +1,79 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Wed Aug  7 07:41:54 2019
+
+@author: Sabie
+"""
+
+
+# =============================================================================
+# Data Types Assignment
+# Write Python code to:
+# 1. Store “Python” in x variable “is” in y variable and “best” in z variable. And print the following output:
+x="Python"
+y="is"
+z="best"
+# a. Pythonisbest
+print(x+y+z)
+# b. Python is best
+print(x,y,z)
+# c. PythonPythonPythonPythonPython
+print(x*5)
+# d. on
+x[4:]
+# e. length of x
+len(x)
+# =============================================================================
+
+#2. Compare “moon” and “moot”.
+'moon'=='moot'
+
+#3. Search “o” in the word “Python”.
+print("Position of 'o' in Python is:",x.index("o")+1)
+
+
+# =============================================================================
+# 4. Create a list my_list with the following values 25, 67, 34, 679, 57, 98, 14. And perform the following operations:
+my_list=[25, 67, 34, 679, 57, 98, 14]
+print(my_list)
+# a. Reverse my_list
+my_list.reverse()
+print(my_list)
+# b. Sort my_list
+my_list.sort()
+print(my_list)
+# c. Insert 789 in 1st position.
+my_list.insert(0,789)
+# =============================================================================
+# =============================================================================
+# 5. Create a tuple my_tuple with the following data: Delhi, Bangalore, Chennai, Pune. And perform the following operations:
+tup=("Delhi",'Bangalore', 'Chennai', 'Pune')
+print(tup)
+# a. Get output as “C”
+tup[2][0]
+# b. Get output as “P”
+tup[3][0]
+# 
+# =============================================================================
+# =============================================================================
+# 6. Create a Dictionaries with the name my_dict and data:
+# Ajay: 302
+# Vijay: 506
+# Dheeraj: 786
+# Niraj: 931
+# Kalyan: 791
+my_dict={'Ajay': 302,'Vijay': 506,'Dheeraj': 786,'Niraj': 931,'Kalyan': 791}
+
+# Perform the following operations:
+# a. Look the value for Niraj.
+my_dict['Niraj']
+
+# b. Add a person Mukesh: 625
+my_dict["Mukesh"]=625
+print(my_dict)
+# c. Delete the record of Vijay.
+my_dict["Vijay"]=[]#only removethe value
+del my_dict["Vijay"]
+# d. Replace the value of Dheeraj to 500.
+my_dict["Dheeraj"]=500
+# =============================================================================
