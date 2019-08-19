@@ -1,0 +1,228 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Wed Aug 14 16:50:53 2019
+
+@author: Sabyasachi
+"""
+
+# =============================================================================
+# 
+# PYTHON TEST 1
+# MARKS: 50 marks TIME: 1 hr. 30 mins.
+# 1. Create the variable my_list. The list contains the following components:
+# (“P”, “Y”, “T”, “H”, “O”, “N”, “I”, “S”, “B”, “E”, “S”, “T”)
+my_list=['P', 'Y', 'T', 'H', 'O', 'N', 'I', 'S', 'B', 'E', 'S', 'T']
+
+# a. Find the length of my_list.
+print(len(my_list))
+# b. Access the elements from beginning to 7th.
+print(my_list[:7])
+# c. Repeat my_list three times and save it in my_new_list.
+my_new_list=my_list*3
+# d. Find position of Y in my_list.
+print(my_list.index("Y"))
+# e. Access the last three elements of my_list.
+print(my_list[-3:])
+
+
+
+# 2.
+# a. What is the difference between List & Tuple? Explain with Example.
+#Ans:
+#List is mutable where as Tupple is immutable. That is if  you have to change values of tupple you have to redeclare it.
+#To declare list we use square bracket[ ] where as to declare tupple we use common bracket()
+#example
+my_list[0]="S"
+print(my_list)#the value of list changed
+my_tup=(['P', 'Y', 'T', 'H', 'O', 'N', 'I', 'S', 'B', 'E', 'S', 'T'])
+my_tup([0])="S"#ERROR: CANT CHANGE THE DECLARED VALUE
+
+# b. What is the difference between Break & Continue? Explain with Example
+
+#Break completely discontinue the loop when the condition is met for break
+#whereas
+#continue only skip that current loop and proceed for next loop
+for i in "PYTHON":
+    if(i=="T"):break
+    print(i)#Return PY
+    
+for i in "PYTHON":
+    if(i=="T"):continue
+    print(i)#Return PYHON
+
+# c. What is the difference between Pandas Dataframe & Numpy Array? Explain with Example.
+#Numpy Arrays can take only numerical values whereas panda data frames can take all type of values
+#Pandas dataFrame have column name where as 
+import pandas as pd
+import numpy as np
+
+data=pd.DataFrame({"a":[101,102],
+                   "b":["Dav","jon"]})
+datapy=np.array([[1,2,3],
+                [4,5,6]])
+
+print(data)
+print(datapy)
+datapy
+
+
+
+# 3. Write a Python user defined function to find the factorial of the given number.
+# (HINT: Factorial of 5 = 5 x 4 x 3 x 2 x 1)
+def factorial(num):
+    factorial=1
+    for i in range(1,num+1):
+        factorial=factorial*i
+    return factorial;
+factorial(6)
+
+
+
+# 4. Write a python program to find the smallest among three numbers present in a list.
+
+l1=[40,35,30]
+def get_smallest(l1):
+    if(l1[0]<l1[1]):
+        if(l1[0]<l1[2]): print("samllest",l1[0])
+        else:print("samllest",l1[2])
+    elif(l1[1]<l1[2]): print("samllest",l1[1])
+    else : print("samllest",l1[2])
+    return;
+get_smallest1(l1)
+
+def get_smallest1(mylist):
+    mylist.sort()
+    return (mylist[0]);
+get_smallest1([10,50,5])
+
+
+
+# 5. Using while loop find the sum of first 10 even numbers.
+
+def question5(num):
+    n=0; total=0;inc=2
+    while(n<num):
+        total=total+inc
+        inc=inc+2
+        n=n+1
+    return (total);
+question5(10)
+
+
+
+# 6. Write a python program to find out the product of all the numbers present in X.
+# X = (23,45,24,123,43,23,32,12,76,8,45)
+X = [23,45,24,123,43,23,32,12,76,8,45]
+
+def question6(list):
+    product=1
+    for i in range(0,len(X)):
+        product=product*X[i]
+    return(product);
+question6(X)
+
+def question6(list):
+    product=1
+    for i in list:
+        product=product*i
+    return(product);
+question6(X)
+
+
+
+# 7. Create two array
+# A = [234, 235, 765, 897, 124, 567, 234, 124]
+# B = [980, 786, 980, 654, 456, 654, 786, 234]
+import numpy as np
+A = np.array([234, 235, 765, 897, 124, 567, 234, 124])
+B = np.array([980, 786, 980, 654, 456, 567, 786, 234])
+
+# a. Find the first 4 element of array A and last 4 elements of array B.
+print(A[:4])
+print(B[-4:])
+# b. Find Sum of array A and product of array B.
+print(np.sum(A))
+print(np.product(B))
+# c. Concatenate array A and array B and store in a new variable concat_array and find the length of concat_array.
+concat_array=np.concatenate((A,B),axis=0)
+print(concat_array)
+print(len(concat_array))
+
+#reshaping
+concat_array2=concat_array.reshape(2,8)
+print(concat_array2)
+
+# d. Find if 786 is present in A array or not. Also find all the unique values in B array.
+A==786
+np.unique(B)
+# e. Compare array A & B.
+print(A==B)
+print(A>B)
+print(A<B)
+
+
+
+# 8. Write a user defined function to accept per month Salary of an employee and find out the bonus amount 
+#that is 12% of the salary. Also print the grade of the employee according to the following criteria.
+
+def question8(salary,bonus=12):
+    bonus=salary*bonus/100
+    if (salary>=30000):
+        if(salary<=40000):print("Grade II")
+        else: print("Grade I")
+    else: print("Grade III")
+    return(bonus);
+question8(25000)
+question8(32000)
+question8(41000)
+
+
+
+# 9. Create the following 2-D array:
+import numpy as np
+First_array = np.array([[23, 45, 67, 12, 44],[23, 45, 76, 34, 23]])
+Second_array = np.array([[21, 23, 54, 78, 12],[12, 86, 45, 76, 87]])
+# a. Concatenate First_array & Second_array and store it in new variable new_array.
+new_array=np.concatenate((First_array,Second_array), axis=0)
+
+# b. Access
+# i. First row 2nd element of First_array
+First_array[0][1]
+First_array[0,1]
+# ii. Second row 4th element of Second_array.
+Second_array[1][3]
+Second_array[1,3]
+
+
+
+# 10. Create a dataframe “Movies” with the following data:
+import pandas as pd
+Movies=pd.DataFrame({"Title":["Pulp Fiction","Inception","Spider-Man","Romeo Must Die","Cold Mountain"],
+                    "Year":[1994,2010,2002,2000,2003],
+                    "Genre":["Crime","Adventure","Action","Action","Drama",],
+                    "Rating":[8.9,8.8,7.3,6.1,7.2]})
+
+print(Movies)
+
+
+# a. Find the highest rated movie.
+Movies[Movies["Rating"]==Movies["Rating"].max()]["Title"]
+
+Movies.sort_values("Rating",ascending=False)["Title"][0]
+
+# b. Find the movie released in the year 2002. 
+Movies[Movies["Year"]==2002]["Title"]
+
+Movies["Title"][Movies["Year"]==2002]
+
+
+#c. Add another column “Director” with the following value: Quentin, Christopher, Sam, Andrzej, Anthony.
+Director=pd.Series(["Quentin", "Christopher", "Sam", "Andrzej", "Anthony"])
+
+Movies["Director"]=Director
+print(Movies)
+
+# d. Access the last 4 records in Movies dataframe.
+Movies[-4:]
+print(Movies.tail(4))
+# =============================================================================
