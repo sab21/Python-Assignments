@@ -1,0 +1,141 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Wed Aug 14 15:30:58 2019
+
+@author: Sabie
+"""
+
+# =============================================================================
+# PANDAS:
+# A. Create EMPLOYEE data frame with following data.
+# Column 1: ID: E100 to E105
+# Column 2: NAME: ANITA, VIJAY, RAKESH, MAHESH, DINESH, SOURAV
+# Column 3: AGE: 36, 37, 49, 20, 38, 44
+# Column 4: SEX: F, M, M, M, M, M
+# Column 5: SALARY: 230000, 340000, 250000, 500000, 300000 And 700000
+# Column 6: GRADE: A, A, B, A, B, B
+import pandas as pd
+EMPLOYEE=pd.DataFrame({"ID":["E"+str(num) for num in np.arange(100,106,1)],
+                        "NAME":['ANITA', 'VIJAY', 'RAKESH', 'MAHESH', 'DINESH', 'SOURAV'],
+                        "AGE":[36, 37, 49, 20, 38, 44],
+                        "SEX":['F', 'M', 'M', 'M', 'M', 'M'],
+                        "SALARY":[230000, 340000, 250000, 500000, 300000, 700000],
+                        "GRADE":['A', 'A', 'B', 'A', 'B', 'B']})
+EMPLOYEE.shape
+print(EMPLOYEE)
+# Perform the following task.
+# 1. Show the top three and last three records.
+EMPLOYEE.head(3)
+EMPLOYEE.tail(3)
+# 2. Who has maximum salary among the 6 employees?
+EMPLOYEE[EMPLOYEE.SALARY==EMPLOYEE.SALARY.max()]["NAME"]
+EMPLOYEE.NAME[EMPLOYEE.SALARY==EMPLOYEE.SALARY.max()]
+EMPLOYEE.NAME[EMPLOYEE.SALARY==np.max(EMPLOYEE.SALARY)]
+EMPLOYEE['NAME'][EMPLOYEE['SALARY']==np.max(EMPLOYEE['SALARY'])]
+EMPLOYEE.iloc[:,1:2][EMPLOYEE.SALARY==np.max(EMPLOYEE['SALARY'])]
+
+# 3. Add another column “Department” to the data frame and assign value as Marketing
+# for all the rows in that column.
+EMPLOYEE['Department']=["Marketing"]*6
+
+# 4. Group the data according to the GRADE column.
+gb = EMPLOYEE.groupby('GRADE')    
+[gb.get_group(x) for x in gb.groups]
+
+EMPLOYEE.groupby('GRADE').min()
+EMPLOYEE.groupby('GRADE')
+EMPLOYEE.pivot(columns='GRADE')
+
+
+
+# B. Create PEOPLE data frame with following data:
+# NAME AGE BLOOD TYPE WEIGHT
+# JOHN 23 A+ 87
+# JANE 54 O+ 78
+# MARY 34 B- 64
+# LUCIE 27 A- 66
+# DOE 85 A+ 72
+# AUSTIN 26 O- 74
+PEOPLE=pd.DataFrame({'NAME':['JOHN','JANE','MARY','LUCIE','DOE','AUSTIN'],
+                    'AGE':[23,54,34,27,85,26],
+                    'BLOOD TYPE':['A+','O+','B-','A-','A+','O-'],
+                    'WEIGHT':[87,78,64,66,72,74]})
+
+
+# Perform the following task.
+# 1. Find the person name whose blood type is O-.
+PEOPLE.NAME[PEOPLE['BLOOD TYPE']=='O-']
+# 2. Add a column with column name as GENDER and data as MALE, MALE, FEMALE,
+# FEMALE, MALE and MALE.
+PEOPLE['GENDER']=['MALE','MALE','FEMALE','FEMALE','MALE','MALE']
+# 3. Group the data according to the gender.
+gb = PEOPLE.groupby('GENDER')    
+[gb.get_group(x) for x in gb.groups]
+
+PEOPLE.groupby('GENDER')
+pd.pivot_table(PEOPLE,columns='GENDER')
+PEOPLE.pivot(columns='GENDER')
+
+# =============================================================================
+
+# =============================================================================
+# NUMPY:
+# 1. Create a 1-D array (Numbers_array) with the following values : [23, 56, 23, 34, 56, 76, 52, 51, 63, 82, 73]
+import numpy as np
+Numbers_array=np.array([23, 56, 23, 34, 56, 76, 52, 51, 63, 82, 73])
+# a. Find the 4th element of Numbers_array.
+Numbers_array[3]
+# b. Find the 1st element of Numbers_array.
+Numbers_array[0]
+# c. Find first four elements of Numbers_array.
+Numbers_array[:4]
+# d. Create another array with the values [38, 99, 87, 67] and concatenate it with Numbers_array.
+array2=np.array([38, 99, 87, 67])
+Numbers_array+array2
+np.concatenate(Numbers_array,array2)
+# 2. Create a 2-D array (Numbers_array2) with the following values :
+# [23, 56, 23, 34, 56, 76][52, 51, 63, 82, 73,58]
+Numbers_array2=np.array([[23, 56, 23, 34, 56, 76],[52, 51, 63, 82, 73,58]])
+# a. Find the length of Numbers_array2.
+len(Numbers_array2)#2
+# b. Find if 56 is present in Numbers_array2.
+56 in Numbers_array2#True
+# c. Find if 99 is present in Numbers_array2.
+99 in Numbers_array2#False
+
+# 3. Create two arrays with the following values :
+# array1 = [23, 56, 23, 34, 56, 76, 52, 51, 63, 82, 73]
+# array2 = [13, 46, 13, 36, 78, 61, 12, 70, 61, 13, 78]
+array1 =np.array([23, 56, 23, 34, 56, 76, 52, 51, 63, 82, 73])
+array2 =np.array([13, 46, 13, 36, 78, 61, 12, 70, 61, 13, 78])
+
+# a. Add, Subtract, Multiply and Divide array1 and array2.
+#sum
+np.sum((array1,array2))
+np.sum((array1,array2),axis=0)#colSum
+np.sum((array1,array2),axis=1)#rowSum
+#subtract
+np.subtract(array1,array2)
+#Multiply
+np.multiply(array1,array2)
+#Division
+np.divide(array1,array2)
+
+# b. Find sum and Product of array1.
+#sum
+np.sum(array1)
+array1.sum()
+#product
+np.multiply(array1)#erorr
+np.product(array1)
+
+# c. Find all the unique value of array2.
+np.unique(array2)
+
+# d. Compare array1 & array2.
+array1==array2
+array1>array2
+array1<array2
+np.equal(array1,array2)
+
+# =============================================================================
