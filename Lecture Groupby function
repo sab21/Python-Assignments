@@ -1,0 +1,118 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Sat Nov 30 17:32:49 2019
+
+@author: Sabie
+"""
+
+import dateutil
+import pandas as pd
+
+# Load data from csv file
+data = pd.DataFrame.from_csv('C:/Users/acer/Desktop/Python Classnotes/GroupBy/phone_data.csv')
+
+# Convert date from string to date times
+data['date'] = data['date'].apply(dateutil.parser.parse, dayfirst=True)
+
+# How many rows the dataset
+data['item'].count()
+
+# How many entries are there for each month?
+data['month'].value_counts()
+
+# Number of non-null unique network entries
+data['network'].nunique()
+
+
+data.groupby(['month']).groups.keys()
+
+len(data.groupby(['month']).groups['2014-11'])
+
+
+# Get the first entry for each month
+data.groupby('month').first()
+
+# Get the sum of the durations per month
+data.groupby('month')['duration'].sum()
+
+# Get the number of dates / entries in each month
+data.groupby('month')['date'].count()
+
+# What is the sum of durations, for calls only, to each network
+data[data['item'] == 'call'].groupby('network')['duration'].sum()
+
+# How many calls, sms, and data entries are in each month?
+data.groupby(['month', 'item'])['date'].count()
+
+# produces Pandas Series
+data.groupby('month')['duration'].sum() 
+# Produces Pandas DataFrame
+data.groupby('month')[['duration']].sum()
+
+#The groupby output will have an index or multi-index on rows corresponding to your 
+#chosen grouping variables. To avoid setting this index, pass “as_index=False” to the groupby operation.
+data.groupby('month', as_index=False).agg({"duration": "sum"})
+data.groupby('month').agg({"duration": "sum"})
+
+
+# Group the data frame by month and item and extract a number of stats from each group
+data.groupby(
+   ['month', 'item']
+).agg(
+    {
+         'duration':sum,    # Sum duration per group
+         'network_type': "count",  # get the count of networks
+         'date': 'first'  # get the first date per group
+    }
+)
+
+# Define the aggregation procedure outside of the groupby operation
+aggregations = {
+    'duration':'sum',
+    'date': lambda x: max(x) - 1
+}
+data.groupby('month').agg(aggregations)
+
+
+# Group the data frame by month and item and extract a number of stats from each group
+data.groupby(
+    ['month', 'item']
+).agg(
+    {
+        # Find the min, max, and sum of the duration column
+        'duration': [min, max, sum],
+        # find the number of network type entries
+        'network_type': "count",
+        # minimum, first, and number of unique dates
+        'date': [min, 'first', 'nunique']
+    }
+)
+
+
+data[data['item'] == 'call'].groupby('month').agg(
+    # Get max of the duration column for each group
+    max_duration=('duration', max),
+    # Get min of the duration column for each group
+    min_duration=('duration', min),
+    # Get sum of the duration column for each group
+    total_duration=('duration', sum),
+    # Apply a lambda to date column
+    num_days=("date", lambda x: (max(x) - min(x)).days)    
+)
+
+
+data[data['item'] == 'call'].groupby('month').agg(
+    max_duration=pd.NamedAgg(column='duration', aggfunc=max),
+    min_duration=pd.NamedAgg(column='duration', aggfunc=min),
+    total_duration=pd.NamedAgg(column='duration', aggfunc=sum),
+    num_days=pd.NamedAgg(
+        column="date", 
+        aggfunc=lambda x: (max(x) - min(x)).days)    
+)
+    
+grouped = data.groupby('month').agg({"duration": [min, max, sum]})
+grouped.columns = grouped.columns.droplevel(level=0)
+grouped.rename(columns={
+    "min": "min_duration", "max": "max_duration", "sum": "sum_duration"
+})
+grouped.head()
