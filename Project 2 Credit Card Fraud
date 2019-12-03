@@ -1,0 +1,573 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Sat Nov 30 21:03:03 2019
+
+@author: Sabyasachi
+"""
+# =============================================================================
+# Machine Learning Project 1 - Credit Card Fraudulent
+# =============================================================================
+# =============================================================================
+# The datasets contains transactions made by credit cards in September 2013 by 
+# european cardholders. This dataset presents transactions that occurred in two days, 
+# where we have 492 frauds out of 284,807 transactions. The dataset is highly unbalanced, 
+# the positive class (frauds) account for 0.172% of all transactions.
+# It contains only numerical input variables which are the result of a PCA transformation. 
+# Unfortunately, due to confidentiality issues, we cannot provide the original features and 
+# more background information about the data. Features V1, V2, ... V28 are the principal 
+# components obtained with PCA, the only features which have not been transformed with 
+# PCA are 'Time' and 'Amount'. 
+# Feature 'Time' contains the seconds elapsed between each transaction 
+# and the first transaction in the dataset. 
+# The feature 'Amount' is the transaction Amount, this feature can be used 
+# for example-dependant cost-senstive learning. 
+# Feature 'Class' is the response variable and it takes value 1 in case of fraud and 0 otherwise.
+# Given the class imbalance ratio, we recommend measuring the accuracy using the Area Under the 
+# Precision-Recall Curve (AUPRC). Confusion matrix accuracy is not meaningful for unbalanced classification.
+# =============================================================================
+# Objective:
+# Your object is to prepare a model to predict a fraudulent transaction, 
+# so that we stop payment of such transaction and save customer money.
+# =============================================================================
+
+
+#importing packages
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+#importing dataset
+rawdata=pd.read_csv("C:/Users/acer/Desktop/Python Classnotes/Python Project/Machine Learning Project1/creditcard.csv")
+
+data=rawdata
+data.shape#(284807, 31)
+data.info()
+data.columns
+#'Time', 'V1', 'V2', 'V3', 'V4', 'V5', 'V6', 'V7', 'V8', 'V9', 'V10',
+#       'V11', 'V12', 'V13', 'V14', 'V15', 'V16', 'V17', 'V18', 'V19', 'V20',
+#       'V21', 'V22', 'V23', 'V24', 'V25', 'V26', 'V27', 'V28', 'Amount',
+#       'Class'
+# V1 to V28 are PCA of various features
+# Feature 'Time' contains the seconds elapsed between each transaction 
+# and the first transaction in the dataset. 
+# The feature 'Amount' is the transaction Amount, this feature can be used 
+# for example-dependant cost-senstive learning. 
+# Target - Class
+# Class 0 = Legit transactions
+# Class 1 = Fruadulent transactions
+#fraud vs. normal transactions 
+gp=data.groupby("Class")
+gp["Class"].count()
+#0    284315
+#1       492
+
+# There are total 284807 transaction out of which only 492 (0.07%)were found fraud
+# Huge Class Imbalance issue is here
+
+# Task is to build a model for this highly Class Imbalance data to predict Fraud
+# without causing much trouble to legit transaction
+
+#numerical summary -> only non-anonymized columns of interest
+desStats=data.describe()
+data.loc[:,["Time","Amount"]].describe()
+#                Time         Amount
+#count  284807.000000  284807.000000
+#mean    94813.859575      88.349619
+#std     47488.145955     250.120109
+#min         0.000000       0.000000
+#25%     54201.500000       5.600000
+#50%     84692.000000      22.000000
+#75%    139320.500000      77.165000
+#max    172792.000000   25691.160000
+
+data[data.Class==1].loc[:,["Time","Amount"]].describe()
+#                 Time       Amount
+# count     492.000000   492.000000
+# mean    80746.806911   122.211321
+# std     47835.365138   256.683288
+# min       406.000000     0.000000
+# 25%     41241.500000     1.000000
+# 50%     75568.500000     9.250000
+# 75%    128483.000000   105.890000
+# max    170348.000000  2125.870000
+
+
+#visualizations of time
+#plt.figure(figsize=(10,8))
+plt.title('Distribution of Time Feature')
+sns.distplot(data.Time)
+#Looks Like number of tranasaction were less in early hours and then get increased
+
+#visualizations of time for fraud event
+#plt.figure(figsize=(10,8))
+plt.title('Distribution of Time Feature during Fraud')
+sns.distplot(data[data.Class==1].Time)
+# Obsereved little different in pattern of Fraud in early seconds. Its quite same 
+# even a spike in early seconds
+
+#visualizations of amount
+#plt.figure(figsize=(10,8))
+plt.title('Distribution of Monetary Value Feature')
+sns.distplot(data.Amount)
+#Data is highly right skewed
+data.Amount.skew()#16.977724453761024
+
+#visualizations of amount for fraud event
+plt.title('Distribution of Monetary Value Feature during Fraud')
+sns.distplot(data[data.Class==1].Amount)
+#Skew went down significantly
+data[data.Class==1].Amount.skew()#3.7544765273817413
+
+#The column 'Time', which are seconds from which the very first 
+#data observation took place. Let's convert that to hours of a day. I'm guessing 
+#the data starts at midnight and ends at midnight.
+
+data['hour'] = data['Time'].apply(lambda x: np.ceil(float(x)/3600) % 24)
+
+#visualizations of time as Hour
+#plt.figure(figsize=(10,8))
+plt.title('Distribution of hour Feature')
+sns.distplot(data.hour)
+# Seems right as number of transaction is less after midnight till dawn and remain quite 
+# same throughout day till midnight
+
+#visualizations of time for fraud event
+plt.title('Distribution of hour Feature during Fraud')
+sns.distplot(data[data.Class==1].hour)
+# Fraud is high after midnight and went down after dawn then rises at noon and 
+# remain quite same
+
+# breakdown of our legit vs fraud transactions via a pivot table.
+data.pivot_table(values='Amount',index='hour',columns='Class',aggfunc='count')
+plt.plot(data.pivot_table(values='Amount',index='hour',columns='Class',aggfunc='count'))
+# here we can clearly see time vs transaction graph justifying above conclusion
+plt.plot(data[data.Class==1].pivot_table(values='Amount',index='hour',columns='Class',aggfunc='count'))
+# Fraud is less between 5am and 11 am
+# Spike at 3am and 12pm
+
+#Checking for missing values
+data.isnull().sum()#None
+
+#Correlation & heatmap
+corMat=data.corr()
+plt.figure(figsize=(12,10))
+heat = sns.heatmap(data=corMat)
+plt.title('Heatmap of Correlation')
+#No Correlation between V1 to V28 - seems correct as they are PCA vectors
+#However there is relation among time class amount and with other features
+
+#fraud vs. normal transactions visualisation
+counts = data.Class.value_counts()
+print(counts)
+sns.barplot(x=counts.index, y=counts)
+plt.title('Count of Fraudulent vs. Non-Fraudulent Transactions')
+plt.ylabel('Count')
+plt.xlabel('Class (0:Non-Fraudulent, 1:Fraudulent)')
+
+#Scaling Amount and Time
+# From numerical summary of only non-anonymized columns of interest ie time and Amount
+# observed high std dev and need to be standardized
+from sklearn.preprocessing import StandardScaler
+scaler = StandardScaler()
+scaler.fit(data.loc[:,["Time","Amount"]])
+array= scaler.fit_transform(data.loc[:,["Time","Amount"]])#its and np array and need to be converted to df
+scaled_time_amount = pd.DataFrame({'Scaled_Time': array[:, 0], 'Scaled_Amount': array[:, 1]})
+
+#concatenating newly created columns w original data
+data_scaled = pd.concat([data, scaled_time_amount], axis=1)
+data_scaled.columns
+
+#dropping old amount and time and hour columns
+data_scaled.drop(['Amount', 'Time', 'hour'], axis=1, inplace=True)
+data_scaled.columns
+# =============================================================================
+
+# Loading Libraries 
+# Load sklearn.model_selection library
+from sklearn.model_selection import train_test_split
+from sklearn.model_selection import KFold
+from sklearn.model_selection import cross_val_score
+# Validation Libraries
+from sklearn.metrics import classification_report
+from sklearn.metrics import confusion_matrix
+from sklearn.metrics import accuracy_score
+from sklearn.metrics import f1_score
+from sklearn.metrics import auc
+from sklearn.metrics import roc_auc_score
+from sklearn.metrics import average_precision_score
+from sklearn.metrics import roc_curve
+from sklearn.metrics import precision_recall_curve
+# Model specific Libraries
+from sklearn.linear_model import LogisticRegression
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+from sklearn.svm import SVC
+#from xgboost import XGBClassifier
+
+
+# Building Model on Un-Scaled Data
+# Create a dataframe with feature variables 
+x = data.iloc[:,:30]
+x.columns
+# Target
+y= data.Class
+y
+
+#train data set
+train_x,test_x,train_y,test_y = train_test_split(x,y, test_size=0.25, random_state=25)
+
+# Show the number of observations for the test and training dataframes
+print('Number of observations in the training data:', len(train_x))
+print('Number of observations in the test data:',len(test_x))
+train_y.value_counts()
+#0    213246
+#1       359
+test_y.value_counts()
+#0    71069
+#1      133
+
+##Spot-Checking Algorithms
+models = []
+
+models.append(('LR', LogisticRegression()))
+models.append(('KNN', KNeighborsClassifier()))
+models.append(('CART', DecisionTreeClassifier()))
+models.append(('RF', RandomForestClassifier()))
+models.append(('GBC',GradientBoostingClassifier()))
+#models.append(('SVM', SVC()))
+#models.append(('XGB', XGBClassifier()))
+
+#testing models
+results = []
+names = []
+
+for name, model in models:
+    kfold = KFold(n_splits=10, random_state=42)
+    cv_results = cross_val_score(model, train_x, train_y, cv=kfold, scoring='roc_auc')
+    results.append(cv_results)
+    names.append(name)
+    msg = '%s: %f (%f)' % (name, cv_results.mean(), cv_results.std())
+    print(msg)
+    
+    
+#Name: cv_result_mean (std)   
+#LR: 0.897206 (0.036852)
+#KNN: 0.598515 (0.018203) - Looks like unscaled data is not good for kNN
+#CART: 0.856202 (0.04548)
+#RF: 0.915466 (0.034284) - Winner Here
+#GBC: 0.681913 (0.168792) - 
+
+#Compare Algorithms    
+plt.boxplot(results)
+# =============================================================================
+
+#Building Model Scaled Data
+data_scaled.columns
+x_scaled=data_scaled.drop(["Class"],axis=1)
+x_scaled.columns
+
+#train data set
+train_x,test_x,train_y,test_y = train_test_split(x_scaled,y, test_size=0.25,random_state=21)
+
+# Show the number of observations for the test and training dataframes
+print('Number of observations in the training data:', len(train_x))#213605
+print('Number of observations in the test data:',len(test_x))#71202
+train_y.value_counts()
+#0    213245
+#1       360
+test_y.value_counts()
+#0    71070
+#1      132
+train_y.value_counts()/test_y.value_counts()
+#0    3.000492
+#1    2.727273
+#splitting is not stratified, Test data has more class 1 proportion compared to train data
+
+##Spot-Checking Algorithms
+models = []
+
+models.append(('LR', LogisticRegression()))
+models.append(('KNN', KNeighborsClassifier()))
+models.append(('CART', DecisionTreeClassifier()))
+models.append(('RF', RandomForestClassifier()))
+#models.append(('SVM', SVC()))
+#models.append(('XGB', XGBClassifier()))
+#models.append(('GBC',GradientBoostingClassifier()))
+
+#testing models
+
+results = []
+names = []
+
+for name, model in models:
+    kfold = KFold(n_splits=10, random_state=42)
+    print(name)
+    cv_results = cross_val_score(model, train_x, train_y, cv=kfold, scoring='roc_auc')
+    results.append(cv_results)
+    names.append(name)
+    msg = '%s: %f (%f)' % (name, cv_results.mean(), cv_results.std())
+    print(msg)
+    
+#Name: cv_result_mean (std)   
+#LR: 0.976449 (0.018856) - - significant improvement from un scaled
+#KNN: 0.912309 (0.038566)  - significant improvement from un scaled
+#CART: 0.863038 (0.043359) - slight improvment
+#RF: 0.918493 (0.026558) - slight improvment
+    
+#Clearly Logistic Regression seems winner but roc auc might mislead us in case of Class Imbalance
+#Lets Build the Model and Check its Recall
+    
+for name, model in models:
+    kfold = KFold(n_splits=3, random_state=42)
+    cv_results = cross_val_score(model, train_x, train_y, cv=kfold, scoring='recall')
+    #scoring  = 'recall', 'roc_auc', 'average_precision', 'precision','f1', accuracy
+    results.append(cv_results)
+    names.append(name)
+    msg = '%s: %f (%f)' % (name, cv_results.mean(), cv_results.std())
+    print(msg)
+
+#Result
+#LR: 0.588850 (0.018019)
+#CART: 0.752299 (0.034964)
+#RF: 0.758855 (0.015604)
+#GBC: 0.433010 (0.239956)
+
+#Compare Algorithms    
+plt.boxplot(results)
+#Random Forest model give the best recall
+
+#Addressing Class Imbalance in Logistic regression
+
+for w in [1,5,10,20,50,100,500,1000,10000]:
+    # fit model
+    Model = LogisticRegression(class_weight={0:1,1:w},random_state=111)
+    Model.fit(train_x,train_y)
+    #predict class values
+    pred_y=Model.predict(test_x)
+    # predict probalities and keep probabilities for the positive outcome only
+    pred_prob = Model.predict_proba(test_x)[:,1]
+    precision, recall, _ = precision_recall_curve(test_y, pred_prob)
+    f1=f1_score(test_y, pred_y)
+    pr_auc=auc(recall, precision)
+    roc_auc=roc_auc_score(test_y,pred_prob)
+    # summarize scores
+    print('---Weight of {} for Fraud class---'.format(w))
+    print("Conf_Matrix: ",confusion_matrix(test_y,pred_y))
+    print("Classificatio Report: ",classification_report(test_y,pred_y))
+    print("accuracy_score : ",accuracy_score(test_y,pred_y))
+    print('LR: f1=%.3f pr_auc=%.3f roc_auc=%.3f' % (f1, pr_auc,roc_auc))
+
+# results:
+# =============================================================================
+# Best LR Model
+# ---Weight of 5 for Fraud class---  
+# [[71054    16]
+#  [   28   104]]
+#               precision    recall  f1-score   support
+# 
+#            0       1.00      1.00      1.00     71070
+#            1       0.87      0.79      0.83       132
+# 
+#    micro avg       1.00      1.00      1.00     71202
+#    macro avg       0.93      0.89      0.91     71202
+# weighted avg       1.00      1.00      1.00     71202
+# 
+# LR: f1=0.825 pr_auc=0.803 roc_auc=0.982  
+# Best Result Scenario
+# =============================================================================
+# =============================================================================
+# ---Weight of 1 for Fraud class---
+# [[71062     8]
+#  [   53    79]]
+#               precision    recall  f1-score   support
+# 
+#            0       1.00      1.00      1.00     71070
+#            1       0.91      0.60      0.72       132
+# 
+#    micro avg       1.00      1.00      1.00     71202
+#    macro avg       0.95      0.80      0.86     71202
+# weighted avg       1.00      1.00      1.00     71202
+# 
+# LR: f1=0.721 pr_auc=0.797 roc_auc=0.981
+# For class weight 1 model's recall is just 60% (Not Good)
+    #i e Model will detect only 60% of the fraud
+# =============================================================================
+# =============================================================================
+# ---Weight of 10000 for Fraud class---
+# [[53785 17285]
+#  [    3   129]]
+#               precision    recall  f1-score   support
+# 
+#            0       1.00      0.76      0.86     71070
+#            1       0.01      0.98      0.01       132
+# 
+#    micro avg       0.76      0.76      0.76     71202
+#    macro avg       0.50      0.87      0.44     71202
+# weighted avg       1.00      0.76      0.86     71202
+# 
+# LR: f1=0.015 pr_auc=0.773 roc_auc=0.984
+# Recall increased to 98% but precision become 0
+# ie this Model will detect many legit transaction as fraud causing trouble for customers    
+# =============================================================================
+
+# Conclusion:
+# Since the classes are highly imbalanced, we need to consider an appropriate
+# measure for the quality of a fraud detection method. 
+#Precision:
+    # denotes the probability that a transaction that is prdicted as fraud is truly a fraud.
+    # It should be close to 1 to avoid trigerring false alarm which may annoy customer
+#Recall/TPR:
+    # is the probability that a true fraud is recognized.
+    # It should be ~80% 
+# Fallout/FPR:
+    # is the probability that a non-fraud is wrongly prdicted as a fraud.
+    # It should be very low. Customer won't want to get fraud alert every day
+# Precesion-Recall AUC is the most appropriate measure to look for 
+#From the above result it is clear Accuracy score and ROC-AUC is same for all the 
+#class weight hence its misleading
+#When the class weight is lower like 1 we observed low Recall and High Precision
+#However with higher class weight Recall went high but precision went down
+# So to balance the Precision and Recall we must observe F1 Score and PR AUC
+# which is best in case of class weight of 5 on fraud 
+# =============================================================================    
+
+#Building RandomForest Model for different class Model
+for w in [1,5,8,10,15]:
+    RFModel = RandomForestClassifier(random_state=111,class_weight={0:1,1:w},n_estimators=50)
+    RFModel.fit(train_x,train_y)
+    #predict
+    pred_y=RFModel.predict(test_x)
+    pred_prob=RFModel.predict_proba(test_x)[:,1]
+    print("Class Weight: ", w)
+    # summarize scores
+    print("Conf Matrix: \n",confusion_matrix(test_y,pred_y))
+    print("Classification report: \n", classification_report(test_y,pred_y))
+    print("F1 Score: ",f1_score(test_y,pred_y))
+    print("PR AUC: ",average_precision_score(test_y,pred_prob))
+    
+# =============================================================================
+# Once again class weight of 5 on fraud class gave the best results
+# And the RF Moddel result is even better than Final LR Model in terms of
+    # PR auc and F1 Score
+    #Result
+# Class Weight: 5
+# Conf Matrix: 
+#  [[71069     1]
+#  [   31   101]]
+# Classification report: 
+#                precision    recall  f1-score   support
+# 
+#            0       1.00      1.00      1.00     71070
+#            1       0.99      0.77      0.86       132
+# 
+#    micro avg       1.00      1.00      1.00     71202
+#    macro avg       0.99      0.88      0.93     71202
+# weighted avg       1.00      1.00      1.00     71202
+# 
+# F1 Score:  0.8632478632478632
+# PR AUC:  0.8585844559875675
+# Recall is 77% ie Model detect 77% of all the fraud
+# Precision is 99% ie 99% times model's prediction will be correct
+# =============================================================================
+
+#We can further improve our model by spliting data using stratified sampling
+train_x,test_x,train_y,test_y=train_test_split(x_scaled,y,test_size=0.25,stratify=y,random_state=1234)
+train_y.value_counts()
+#0    213236
+#1       369
+test_y.value_counts()
+#0    71079
+#1      123    
+train_y.value_counts()/test_y.value_counts()
+#0    2.999986
+#1    3.000000
+# Now we can say the sampling is stratified ie Class distribution in both train and test data
+# is in equal proportions.
+
+
+#Building Final RF Model with stratified data on class wt 5
+RFModel_final=RandomForestClassifier(n_estimators=50,random_state=111,class_weight={0:1,1:5})
+RFModel_final.fit(train_x,train_y)
+pred_y=RFModel_final.predict(test_x)
+pred_prob=RFModel_final.predict_proba(test_x)[:,1]
+print('Conf Matrix: \n', confusion_matrix(test_y,pred_y))
+print('Classification Report: \n',classification_report(test_y, pred_y))
+print('PR AUC: ',average_precision_score(test_y, pred_prob))
+print('F1 Score: ',f1_score(test_y,pred_y))
+print('Accuracy Score: ',accuracy_score(test_y,pred_y))
+print('ROC-AUC: ',roc_auc_score(test_y,pred_prob))
+precision, recall, _ = precision_recall_curve(test_y, pred_prob)
+tpr,fpr,_=roc_curve(test_y, pred_prob)
+f1=f1_score(test_y,pred_y)
+pr_auc=average_precision_score(test_y,pred_prob)
+roc_auc=roc_auc_score(test_y,pred_prob)
+# roc_auc, pr_auc= auc(tpr,fpr), auc(recall,precision)
+#Plotting PR Auc Graph
+plt.plot(recall, precision, marker='.', 
+         label='F1 Score = {}\n PR AUC = {}'.format(round(f1,4),round(pr_auc,4)))
+plt.title('Random Forest: Precision Recall Curve')
+plt.xlabel('Recall')
+plt.ylabel('Precision')
+plt.legend()
+plt.show()
+#Plotting ROC Auc Graph
+plt.plot(tpr, fpr, marker='.', label='ROC AUC: {}'.format(round(roc_auc,4)))
+plt.title('Random Forest: ROC Curve')
+plt.xlabel('FPR')
+plt.ylabel('TPR')
+plt.legend()
+plt.show()
+
+# =============================================================================
+# Final Score of Overall Best Model
+# Conf Matrix: 
+#  [[71076     3]
+#  [   24    99]]
+# Classification Report: 
+#                precision    recall  f1-score   support
+# 
+#            0       1.00      1.00      1.00     71079
+#            1       0.97      0.80      0.88       123
+# 
+#    micro avg       1.00      1.00      1.00     71202
+#    macro avg       0.99      0.90      0.94     71202
+# weighted avg       1.00      1.00      1.00     71202
+# 
+# PR AUC:  0.8795074617447123
+# F1 Score:  0.8800000000000001
+# Accuracy Score:  0.9996207971686188
+# ROC-AUC:  0.9626132814318477
+# =============================================================================
+# =============================================================================
+# Conclusion:
+# Finally Model loooks good with above result. Used Random Forest algorithm to build it.
+
+# Results:
+# Recall: (True Positive/ Total actual Positive) = 0.80
+# With stratified data the model gained in Recall from 77% to 80% which is good.
+# ie the model is capable of catching 80% of fraud with given dataset
+
+# Precision:(True Positive/Total Predicted Positive) = 0.97
+# But the model lost precision from 99% to 97% which is not very significant change
+# ie Out of all the fraud prediction, model is correct for 97% times
+
+# Fallout/False Positive Rate ( False Positives / Total Actual Negatives ) =  4.2e-5
+# It is very less and it is good as customer won't want to get false alarm every day
+
+# So the model detects frauds fairly well without annoying customers
+
+# PR AUC: Precision- Recall Score = 0.88
+# It is the ultimate indiacator to determine the model performance in case of class imbalance
+# It also gained with stratified data so we can conclude this is the best Model
+
+# F1 Score: 2(Precision*Recall)/(Precision+Recall) = 0.88
+# It also improved that means balance between Recall and Precision is improved
+
+# Its meaningless to compare Accuracy Score(0.9996) and Roc Auc Score (0.963) here
+
+# ROC curve is not a good visual illustration for highly imbalanced data,
+# because the False Positive Rate does not drop drastically when the Total Real Negatives is huge.
+# Instead we can visualize PR curve
+# =============================================================================
