@@ -1,0 +1,226 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Thu Sep 20 16:56:04 2019
+
+@author: Sabie
+"""
+
+
+# =============================================================================
+# Python Test – 2
+
+import os
+os.chdir("C:/Users/acer/Desktop/Python Classnotes/Test 2")
+os.listdir()
+
+import numpy as np
+import pandas as pd
+
+# 1. Create a dataframe Employee_Salaries using “Employee_Names__Salaries.csv”. 
+# And find mean and standard deviation of annual salary for Full time employees.
+Employee_Salaries=pd.read_csv("Employee_Names__Salaries.csv")
+
+Employee_Salaries.head
+Employee_Salaries.shape#(32812 rows, 8 columns)
+Employee_Salaries.columns
+#'Name', 'Job Titles', 'Department', 'Full or Part-Time',
+#'Salary or Hourly', 'Typical Hours', 'Annual Salary', 'Hourly Rate'
+Employee_Salaries.isnull().sum()#Missing Values in Typical Hours, Annual Salary, Hourly Rate
+Employee_Salaries.describe()
+
+np.dtype(Employee_Salaries['Annual Salary'])
+np.dtype(Employee_Salaries['Typical Hours'])
+money=['$1900']
+money.sub
+Employee_Salaries['Annual Salary'].sum()
+#mean Salary for full time employees
+Employee_Salaries.groupby('Full or Part-Time').mean()
+#Annual Salary of Full time employee= 87322.585926 
+
+#std
+Employee_Salaries.groupby('Full or Part-Time').std()
+#Std dev of Full time employee= 20767.051031 
+
+Employee_Salaries[Employee_Salaries['Full or Part-Time']=='F']['Annual Salary'].std()
+#20767.05103059041
+
+# 2. Using Dataframe Employee_Salaries
+# a) Calculate how much each part-time employee can earn in a year using “typical Hours” and 
+# Hourly rate”. Assume there is 52 week in a year. And calculate average salary for part-time employees
+x=Employee_Salaries[Employee_Salaries['Full or Part-Time']=='P']['Typical Hours']*Employee_Salaries[Employee_Salaries['Full or Part-Time']=='P']['Hourly Rate']
+x
+x.mean()
+
+# b) Find quartiles for Annual Salary and Hourly rate of “GENERAL SERVICES” department.
+Employee_Salaries[Employee_Salaries.Department=='GENERAL SERVICES']['Annual Salary'].quantile(.25,.75)
+
+Employee_Salaries[Employee_Salaries.Department=='GENERAL SERVICES']['Annual Salary'].describe()
+# =============================================================================
+# 25%       68556.000000
+# 50%       83484.000000
+# 75%       98202.000000
+# =============================================================================
+
+
+# c) Find all descriptive statistics for “POLICE” department.
+Employee_Salaries[Employee_Salaries.Department=='POLICE'].describe()
+# =============================================================================
+#        Typical Hours  Annual Salary  Hourly Rate
+# count           11.0   13050.000000    11.000000
+# mean            20.0   87091.697011     9.373636
+# std              0.0   17484.996721     0.099224
+# min             20.0   38376.000000     9.270000
+# 25%             20.0   84054.000000     9.270000
+# 50%             20.0   90024.000000     9.460000
+# 75%             20.0   94524.000000     9.460000
+# max             20.0  260004.000000     9.460000
+# =============================================================================
+
+
+# 3. Extract data given in HR_Data and find correlation of “satisfaction_level” with “last_evaluation”,
+# ”number_project”,”average_montly_hours” and “time_spend_company”. Explain your results.
+HR_Data=pd.read_csv("HR_Data.csv")
+HR_Data.head
+HR_Data.shape#(14999, 10)
+HR_Data.columns
+HR_Data.isnull().sum()
+HR_Data.describe()
+
+#'satisfaction_level', 'last_evaluation', 'number_project',
+# 'average_montly_hours', 'time_spend_company', 'Work_accident', 'left',
+# 'promotion_last_5years', 'sales', 'salary'
+HR_Data.describe()
+HR_Data.satisfaction_level.corr(HR_Data.last_evaluation)#r=0.10502121397148495
+#correlation between satisfaction_level and last_evaluation = 0.105: VERY WEAK +ve CORRELATION
+plt.scatter(HR_Data.satisfaction_level,HR_Data.last_evaluation)
+
+np.corrcoef(HR_Data.satisfaction_level,HR_Data.number_project)#r=-0.14296959
+#correlation between satisfaction_level and number_project = -0.143: VERY WEAK -ve CORRELATION
+
+
+from scipy.stats import pearsonr
+pearsonr(HR_Data.satisfaction_level,HR_Data.average_montly_hours)
+np.corrcoef(HR_Data.satisfaction_level,HR_Data.average_montly_hours)
+#r= -0.020048113219472988, p-value = 0.01407503544685661
+#correlation between satisfaction_level and average_montly_hours = -0.02: No Correlation
+
+
+HR_Data.satisfaction_level.corr(HR_Data.time_spend_company)#r=0.10502121397148495
+#correlation between satisfaction_level and time_spend_company = 0.105: VERY WEAK +ve CORRELATION
+
+
+# 4. Explain following terms for correlation
+# a) Strong Correlation
+#When mode of correlation coefficient (e.g pearson r) is greater than 0.5 than we can
+#conclude the correlation between two variable is strong
+
+# b) Covariance
+#Variation of two numeric variable with respect to each other
+#Covar= Summation((x-mean(x))*(y-mean(y)))
+
+# c) Correlation Coefficient
+#It is the coefficient that measures the correlation between two numeric variables
+#e.g pearson r
+#r(pearson's r)= covariance between x and y / (stdev of x* stdev of y)
+
+
+# d) Correlation Matrix
+#It is matrix that contains correation of each numeric variables with each other in a data
+
+HR=HR_Data.iloc[:,0:4]
+CorrMatrix=HR.corr()
+
+
+# 5. Explain Linear Regression equation and R-squared value. What is residual and how to 
+# calculate MSE (Mean Sum of Square of Error).
+# =============================================================================
+# Linear Regression equation:
+#     Y=w*x+b
+#     Y= Target
+#     X=Feature
+#     w= weight (slope)
+#     b=bias(intercept)
+# =============================================================================
+
+# R sqaured is used to give accuracy of derived model
+#0<=R-Sqrd<=1
+#If R squared >0.7 good fit model
+#If R squared >0.85 best fit model
+#If R squared <.5 poor fit model
+    
+#Residual is error
+#After model fit,  the error between original and fitted value is called residue
+#For LReg the should be Homoscedastic
+
+#mean squared error: mean of sum of sqaure of error
+# error =  actual - prdicted
+#sum of sqr  = summation((error - mean(error))^2)
+#mean sqr error = sum of sqe error/dof   where dof =  degree of freedom
+#dof = no of obs - 1 - no of features
+
+
+
+
+# 6. Create a dataframe House_Data using “kc_house_data.csv” in python. Prepare a regression model to 
+# predict Price using variables bedrooms, bathrooms, sqft_living, sqft_lot, floors, waterfront, view,
+# condition, grade,sqft_above.
+House_Data=pd.read_csv("kc_house_data.csv")
+House_Data.shape# (21613, 21)
+House_Data.columns
+#'id', 'date', 'price', 'bedrooms', 'bathrooms', 'sqft_living',
+ #      'sqft_lot', 'floors', 'waterfront', 'view', 'condition', 'grade',
+  #     'sqft_above', 'sqft_basement', 'yr_built', 'yr_renovated', 'zipcode',
+   #    'lat', 'long', 'sqft_living15', 'sqft_lot15'
+
+#Missing values
+House_Data.isnull().sum()#No missing values
+
+#Target & Features
+y=House_Data.price#target
+
+#feature
+x=House_Data[['bedrooms', 'bathrooms', 'sqft_living', 'sqft_lot', 'floors', 'waterfront', 'view','condition', 'grade','sqft_above']]
+
+#Outliers
+import matplotlib.pyplot as plt
+plt.boxplot(y)#too many outlier on upper cap
+plt.boxplot(x)
+
+#No time to remove outliers
+
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error
+
+#splitting data into train andtest
+train_x,test_x,train_y,test_y=train_test_split(x,y,test_size=0.3, random_state=10)
+
+
+#building Model
+model=LinearRegression().fit(train_x,train_y)
+model.score(train_x,train_y)
+#R-sqrd = 0.6051281269067157
+
+pred_y=model.predict(test_x)
+mean_squared_error(test_y,pred_y)
+#MSE= 54492021349.06352
+#Model is poor
+#need to work on outlier
+
+
+
+
+
+   
+
+# =============================================================================
+
+
+
+
+
+
+
+
+
+
