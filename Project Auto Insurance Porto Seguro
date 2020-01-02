@@ -1,0 +1,822 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Thu Dec  5 19:53:38 2019
+
+@author: Sabyasachi Sahu
+"""
+
+# =============================================================================
+# Python Project 4 :Auto Insurance,Porto Seguro, Brazil
+# =============================================================================
+# =============================================================================
+# Overview
+# Nothing ruins the thrill of buying a brand new car more quickly than seeing your 
+# new insurance bill. The sting’s even more painful when you know you’re a good driver. 
+# It doesn’t seem fair that you have to pay so much if you’ve been cautious on the road for years.
+# Porto Seguro, one of Brazil’s largest auto and homeowner insurance companies, completely agrees. 
+# Inaccuracies in car insurance company’s claim predictions raise the cost of insurance 
+# for good drivers and reduce the price for bad ones.
+# In this competition, you’re challenged to build a model that predicts the probability that a 
+# driver will initiate an auto insurance claim in the next year. While Porto Seguro has used 
+# machine learning for the past 20 years, they’re looking to Kaggle’s machine learning community 
+# to explore new, more powerful methods. A more accurate prediction will allow them to further 
+# tailor their prices, and hopefully make auto insurance coverage more accessible to more drivers.
+# Data Description
+# In this competition, you will predict the probability that an auto insurance policy holder files a claim.
+# In the train and test data, features that belong to similar groupings are tagged as such 
+# in the feature names (e.g., ind, reg, car, calc). In addition, feature names include the 
+# postfix bin to indicate binary features and cat to indicate categorical features. 
+# Features without these designations are either continuous or ordinal. Values of -1 
+# indicate that the feature was missing from the observation. The target columns 
+# signifies whether or not a claim was filed for that policy holder.
+# File descriptions
+# •	train.csv contains the training data, where each row corresponds to a policy holder, 
+# and the target columns signifies that a claim was filed.
+# •	test.csv contains the test data.
+# The following steps need to be performed.
+# 1.	Extract the data.
+# 2.	Analyse the data type of each column.
+# 3.	Find if any NA/Blank value is present or not.
+# 4.	If the columns are numeric find mean, median & mode of the column & if it is character find the count.
+# 5.	Group the columns of the data.
+# 6.	Scale the data.
+# 7.	Find outliers of the data.
+# 8.	Plot the data.
+# 9.	Perform Correlation/ Chi-square Test to know the relationship between the columns.
+# 10. Prepare and validate Model
+# =============================================================================
+
+# Loading Libraries
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+from scipy import stats
+from scipy.stats import chi2_contingency
+
+from sklearn.model_selection import train_test_split
+
+from sklearn.preprocessing import MinMaxScaler
+
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
+from xgboost import XGBClassifier
+from sklearn.metrics import classification_report
+from sklearn.metrics import confusion_matrix
+from sklearn.metrics import accuracy_score
+
+
+train=pd.read_csv("C:/Users/acer/Desktop/Python Classnotes/Python Project/Machine Learning Project3/Data/train.csv")
+test=pd.read_csv("C:/Users/acer/Desktop/Python Classnotes/Python Project/Machine Learning Project3/Data/test.csv")
+
+
+train.shape#(595212 rows, 59 columns)
+test.shape#(892816, 58)
+# No tarrget 
+
+train.columns
+# =============================================================================
+# 'id', 'target', 'ps_ind_01', 'ps_ind_02_cat', 'ps_ind_03',
+#        'ps_ind_04_cat', 'ps_ind_05_cat', 'ps_ind_06_bin', 'ps_ind_07_bin',
+#        'ps_ind_08_bin', 'ps_ind_09_bin', 'ps_ind_10_bin', 'ps_ind_11_bin',
+#        'ps_ind_12_bin', 'ps_ind_13_bin', 'ps_ind_14', 'ps_ind_15',
+#        'ps_ind_16_bin', 'ps_ind_17_bin', 'ps_ind_18_bin', 'ps_reg_01',
+#        'ps_reg_02', 'ps_reg_03', 'ps_car_01_cat', 'ps_car_02_cat',
+#        'ps_car_03_cat', 'ps_car_04_cat', 'ps_car_05_cat', 'ps_car_06_cat',
+#        'ps_car_07_cat', 'ps_car_08_cat', 'ps_car_09_cat', 'ps_car_10_cat',
+#        'ps_car_11_cat', 'ps_car_11', 'ps_car_12', 'ps_car_13', 'ps_car_14',
+#        'ps_car_15', 'ps_calc_01', 'ps_calc_02', 'ps_calc_03', 'ps_calc_04',
+#        'ps_calc_05', 'ps_calc_06', 'ps_calc_07', 'ps_calc_08', 'ps_calc_09',
+#        'ps_calc_10', 'ps_calc_11', 'ps_calc_12', 'ps_calc_13', 'ps_calc_14',
+#        'ps_calc_15_bin', 'ps_calc_16_bin', 'ps_calc_17_bin', 'ps_calc_18_bin',
+#        'ps_calc_19_bin', 'ps_calc_20_bin'
+# =============================================================================
+
+
+#Checking datatypes
+dtype_before=train.dtypes
+print(dtype_before)
+#from result all data types are stored in either int or float
+
+#Target Value inspection
+counts=train.target.value_counts()
+print(counts[0])
+train.target.value_counts()/train.target.count()*100
+#0    573518   96.355248%
+#1     21694    3.644752%
+#Class Imbalance Problem
+sns.barplot(x=counts.index,y=counts)
+plt.ylabel("Counts")
+plt.xlabel("Claim(1) vs Non Claim(0)")
+plt.title("Target variable distribution")
+plt.legend(round(counts/counts.sum()*100,2))
+plt.show
+# ============================================
+
+#Missing Value Analysis
+train.isnull().sum() #No outcome of null values
+
+#But we know that record with value equal to -1 is missing value
+# checking for -1 in data
+null=train[train==-1].sum()
+
+#Now checking for null values
+print(null[null<0].abs()) #missing values by numbers 
+#Checking null value sin term of %
+col_null=train[train==-1].sum()/train.count()
+col_null=col_null.abs()
+col_null=round(col_null[col_null>0]*100,4)
+print(col_null) #misisng values by %
+
+#Visulaising Missing Values
+splot=sns.barplot(x=col_null.index, y=col_null)
+plt.xlabel("Missing Columns")
+plt.ylabel("Percentage")
+plt.title("Missing Value in Dataset (in %)")
+plt.xticks(rotation="vertical")
+for p in splot.patches:#for annonating - reference stackoverflow
+    splot.annotate(format(p.get_height(), '.2f'), (p.get_x() + p.get_width() / 2., 
+                          p.get_height()), ha = 'center', va = 'center', xytext = (0, 10), 
+    textcoords = 'offset points',fontsize=8)
+plt.show()
+
+# ps_ind_02_cat       216   0.036%
+# ps_ind_04_cat        83   0.014%
+# ps_ind_05_cat      5809   0.976%
+# ps_reg_03        107772  18.107%
+# ps_car_01_cat       107   0.018%
+# ps_car_02_cat         5   0.0008%
+# ps_car_03_cat    411231  69.089%
+# ps_car_05_cat    266551  44.783%
+# ps_car_07_cat     11489   1.930%
+# ps_car_09_cat       569   0.096%
+# ps_car_11             5   0.00084%
+# ps_car_12             1   0.00016%
+# ps_car_14         42620   7.16%
+# =============================================================================
+
+#Renaming calc to cal to group them with cat bin so that they have equal length for extraction of numeric and ordinal data
+train.columns=train.columns.str.replace("calc","cal")
+#seggregating numeric and ordinal by help of length of col names
+train_num_ord=train.loc[:,train.columns.str.len()==9]# Numeric or Ordinal fields - 26 columns
+
+#Segrregating columns according to their original datatypes 
+train_cat=train.filter(regex='cat',axis=1)#Categorical Columns - 14 columns
+train_bin=train.filter(regex='bin',axis=1)# Binary Fields  - 17 columns
+#Note: for prefix we can use ^ eg '^pefix' and for suffix we can use $  eg 'suffix$'
+ 
+
+#Seggregating columna according to their  
+train_ind=train.filter(regex='ind',axis=1)  #Individual columns - 18 columns
+train_car=train.filter(regex='car',axis=1)  #Car - 16 columns
+train_reg=train.filter(regex='reg',axis=1)  #Region - 3 columns
+train_cal=train.filter(regex='cal',axis=1) #Calculated - 20 columns
+# =============================================================================
+
+# ==============User Defined Functions ========================================
+
+#Function to visualize variables when proportion of customer claimed ie target == 1
+def UDF_Barplot_variables_vs_target1(data):
+    for col in data:
+        plt.figure()
+        fig, ax = plt.subplots()
+        # Calculate the percentage of target=1 per category value
+        cat_perc = train[[col, 'target']].groupby([col],as_index=False).mean()
+        # Bar plot
+        sns.barplot(ax=ax, x=col, y='target', data=cat_perc)
+        plt.ylabel('% target')
+        plt.xlabel(col)
+        
+        plt.show();
+        
+# ==============
+# Function to test Chi Sqr test & Delete 
+
+
+test_result=pd.DataFrame()
+def UDF_chiSqrTest(df,d=train):
+    b4=df.shape[1]
+    global test_result
+    for col in df:
+        cont_table=pd.crosstab(d.target,df[col])
+        xsq,pvalue,dof,expected=chi2_contingency(cont_table)
+        print(col)
+        print("X Sqr: ",xsq," pvalue:",pvalue)
+        if(pvalue>0.05):
+            print("Column to be DROPPED \n ")
+            df=df.drop(col,axis=1)
+        else:    
+            print("Column Retained \n ")
+    print("No of Columns Retained: ",df.shape[1])
+    print('Columns Retained:\n',df.columns)
+    print("No of Columns Dropped: ",b4-df.shape[1])
+    test_result=df;#Storing result in test_result
+    
+
+# ======================  UDF_chiSqrTest ends =================================      
+
+#Function for T-test        
+
+def UDF_ttest(data,d=train):
+    for col in range(len(data.columns)):
+        Claimed=data.iloc[:,col].dropna()[train.target==1] 
+        NotClaimed=data.iloc[:,col].dropna()[train.target==0] 
+        tstat,pvalue=stats.ttest_ind(Claimed,NotClaimed)
+        print("\n",data.iloc[:,col].name)
+        print("Pvalue: ",pvalue,",  t statistics: ",tstat)
+        if(pvalue<0.05):
+            print("P-Value is less than 0.05 therefore We REJECT Null Hypothesis") 
+        else:    
+            print("P-Value is more than 0.05 therefore we Cannot Reject Null Hypothesis")
+
+
+# ======================== BINARY FIELDS(17 columns) ==========================
+#Analysing Binary Columns
+# We know that no missing value in binary fields
+#Lets check out 0 to 1 ratio
+# in numbers counts
+for col in range(len(train_bin.columns)):
+    print(train_bin.iloc[:,col].value_counts())
+    
+#For proportion
+for col in range(len(train_bin.columns)):
+    print(train_bin.iloc[:,col].value_counts()/train_bin.iloc[:,col].count()*100)
+
+#Visualizing Binary fields
+zero_list = []
+one_list = []
+for col in train_bin:
+    zero_list.append((train_bin[col]==0).sum())
+    one_list.append((train_bin[col]==1).sum())
+
+N=len(train_bin.columns)
+ind=np.arange(N)
+
+p1 = plt.bar(ind, zero_list)
+p2 = plt.bar(ind, one_list,bottom=zero_list)
+plt.ylabel('No of Ids')
+plt.title('Binary Fields Chart')
+plt.xticks(ind, (train_bin.columns),rotation='vertical')
+#plt.yticks(np.arange(0, 81, 10))
+plt.legend((p1[0], p2[0]), ('0', '1'))
+plt.show()
+
+#Conclusion:
+#Ind_10 Ind_11 Ind_12 Ind_13 have huge class imbalance problem
+
+
+#Visualising Binary variables and the proportion of customers with target = 1
+        
+UDF_Barplot_variables_vs_target1(train_bin)
+#Apart from calculated binary field all other show association with target.
+ 
+
+#Feature Engineering   
+#Chi Sqr Test between target and binary fields;
+#And deleting insignificant variables
+UDF_chiSqrTest(train_bin)    
+#Assigning test result from chi sqr test 
+train_bin=test_result
+
+
+#H0: Proportion of claimed in categories of feature are same
+#H1: Proportion of claimed in categories of feature are not same   (Association)
+#Result - Target is
+    #Associated columns
+       # ps_ind_06_bin, ps_ind_07_bin, ps_ind_08_bin, ps_ind_09_bin
+       # ps_ind_12_bin(still have assocoaition inspite of having huge class imbalance )
+       # ps_ind_16_bin,ps_ind_17_bin,ps_ind_18_bin,
+    #Not Associated   columns
+      # ps_ind_10_bin,ps_ind_11_bin,ps_ind_13_bin,ps_calc_15_bin,ps_calc_16_bin,
+      # ps_calc_17_bin,ps_calc_18_bin,ps_calc_19_bin,ps_calc_20_bin
+
+
+train_bin.shape
+#Total 8 columns found to be significant     
+# =============================================================================
+
+# ===============CATEGORICAL (14 col) =========================================
+#Analysing Categorical Columns
+#Changing the datatypes of categorical column  from int to str
+#train_cat=train_cat.astype(str) - Not necessary
+#train_cat.dtypes
+#train_cat.describe()
+
+#Missing values
+print(train_cat[train_cat<0].sum().abs()," missing values")
+#Total 9 categorical columns having missing values
+# ps_car_03_cat, ps_car_05_cat having 60 and 44 % data missing and can be dropped
+
+#Observing categorical counts in column  
+for col in train_cat:
+    print(col," : ",train_cat[col].value_counts().shape[0], ' Unique Categories')
+
+#The result also include missing value(-1) as one category
+#ps_car_11_cat has 104 categories - may be cities 
+#whereas next highest category columns is ps_car_06_cat with 18 cat
+    
+#Visualising Bar Plot of categorical col
+for col in range(len(train_cat.columns)):
+    counts = train_cat.iloc[:,col].value_counts()
+    #print(counts)
+    sns.barplot(x=counts.index, y=counts)
+    plt.title(counts.name)
+    plt.ylabel('Count')
+    plt.xlabel('Categories')
+    plt.show()
+
+#Visualising Categorical variables and the proportion of customers with target = 1 ie claimed
+UDF_Barplot_variables_vs_target1(train_cat)
+
+#Feature Engineering
+#Chi Sqr Test between target and Categorical fields;;
+# And simulatenously deleting insignificant columns
+
+UDF_chiSqrTest(train_cat)
+#Assigning test result from chi sqr test 
+train_cat=test_result
+
+#H0: Proportion of claimed in categories of feature are same
+#H1: Proportion of claimed in categories of feature are not same   (Association)
+
+# No of Columns Retained:  13
+# Columns Retained:
+#  Index(['ps_ind_02_cat', 'ps_ind_04_cat', 'ps_ind_05_cat', 'ps_car_01_cat',
+#        'ps_car_02_cat', 'ps_car_03_cat', 'ps_car_04_cat', 'ps_car_05_cat',
+#        'ps_car_06_cat', 'ps_car_07_cat', 'ps_car_08_cat', 'ps_car_09_cat',
+#        'ps_car_11_cat'],
+#       dtype='object')
+# No of Columns Dropped:  1
+#ps_car_10_cat is not associated with target, Rest all have association with target
+
+#Conclusion from categorical field analysis
+# 1.As we can see from the variables with missing values, it is a good idea to keep 
+#   the missing values as a separate category value, instead of replacing them by 
+#   the mode for instance. The customers with a missing value appear to have a much higher 
+#   (in some cases much lower) probability to ask for an insurance claim.  
+# 2.ps_car_03_cat,ps_car_05_cat has above 40% data missing but still we find association
+#    as misisng value appear to have much higher prob to ask for claim 
+# 3.ps_car_10_cat is not significantly associated and hence can be dropped
+#So 13 columns are significant
+
+#Creating dummy variables - Get_dummies - One Hot encoding
+#The values of the categorical variables do not represent any order or magnitude. 
+#For instance, category 2 is not twice the value of category 1. Therefore we can 
+#create dummy variables to deal with that. We drop the first dummy variable as this 
+#information can be derived from the other dummy variables generated for the categories
+# of the original variable
+train_cat_dummy=pd.DataFrame()
+for col in range(len(train_cat.columns)):
+    dummy=pd.get_dummies(train_cat.iloc[:,col].astype(str),prefix=train_cat.iloc[:,col].name)
+    train_cat_dummy=pd.concat([train_cat_dummy,dummy],axis=1)
+    
+train_cat_dummy.columns#total 181 columns generated with one hot encoding method
+train_cat_dummy.dtypes
+# =============================================================================
+    
+# =====================Numerical & Ordinal ===================================    
+#Numerical Columns
+#Checking datatypes of train_num_ord
+train_num_ord.dtypes
+
+#Seems float fields are continous and all other fields are ordinal fields
+#Grouping further into ordinal and float
+train_num=train_num_ord.select_dtypes(include = ['float']) #10 Col
+train_ordinal=train_num_ord.select_dtypes(include = ['int64']) #16 col
+
+train_num.columns
+train_ordinal.columns
+
+# ============================ORDINAL(15 Col)==================================
+
+#Checking Mean Median Mode Std Dev For Ordinal Fields
+for col in range(len(train_ordinal.columns)):
+    print('\n',train_ordinal.iloc[:,col].name)
+    print('Mean: ',train_ordinal.iloc[:,col].mean())
+    print('Median: ',train_ordinal.iloc[:,col].median())
+    print('Mode: ',train_ordinal.iloc[:,col].mode())
+    print('Std Dev: ',train_ordinal.iloc[:,col].std())
+    #print(train_ordinal.iloc[:,col].value_counts())
+
+#Checking number of categories in ordinal data    
+for col in range(len(train_ordinal.columns)):
+    print(train_ordinal.iloc[:,col].name," : ",train_ordinal.iloc[:,col].value_counts().shape[0])
+    
+#Bar Plot of Ordinal col
+for col in range(len(train_ordinal.columns)):
+    counts = train_ordinal.iloc[:,col].value_counts()
+    #print(counts)
+    sns.barplot(x=counts.index, y=counts)
+    plt.title(counts.name)
+    plt.ylabel('Count')
+    plt.xlabel('Categories')
+    plt.show()
+
+#Visualising Ordinal variables and the proportion of customers with target = 1
+UDF_Barplot_variables_vs_target1(train_ordinal)
+
+    
+#Checking Correlation between Ordinal fields
+corMat=train_ordinal.corr()
+sns.heatmap(corMat) #no correlation
+
+#Mising values
+train_ordinal[train_ordinal<0].sum().abs()
+#ps_car_11 has 5 value missing
+
+#Replacing misising value with median
+train_ordinal[train_ordinal==-1]=np.nan
+
+train_ordinal.isnull().sum()
+train_ordinal=train_ordinal.fillna(train_ordinal.median())
+
+#Feature Engineering
+#Chi Sqr Test between target and Ordinal fields;;
+# And simulatenously deleting insignificant columns
+UDF_chiSqrTest(train_ordinal)
+#Assigning test result from chi sqr test 
+train_ordinal=test_result
+
+#H0: Proportion of claimed in categories of feature are same
+#H1: Proportion of claimed in categories of feature are not same   (Association)
+
+#No of Columns Retained:  5
+#Columns Retained:
+# Index(['ps_ind_01', 'ps_ind_03', 'ps_ind_14', 'ps_ind_15', 'ps_car_11'], dtype='object')
+#No of Columns Dropped:  11
+
+#In Barplot,  ps_cal_13 graph, last ordinal value show there is relation between them
+train.ps_cal_13.value_counts()
+#but last ordinal value ie 13 has only 4 records, so chiSqr test result seems correct
+
+#5 columns retained
+
+   
+# ============================NUMERICAL Fields (10 columns)====================
+    
+#Continous Numerical Data
+#Checking Mean Median  Std Dev For Continous Fields    
+for col in range(len(train_num.columns)):
+    print('\n',train_num.iloc[:,col].name)
+    print('Mean: ',train_num.iloc[:,col].mean())
+    print('Median: ',train_num.iloc[:,col].median())
+    print('Std Dev: ',train_num.iloc[:,col].std())
+    print("Missing Values: ",train_num.iloc[:,col][train_num.iloc[:,col]==-1].sum())
+
+train_num.describe()
+
+#For Now replacing -1 to nan
+train_num[train_num==-1]=np.nan    
+train_num.isnull().sum()
+   #Missing Values
+#ps_reg_03 - 107772
+#ps_car_12 - 1
+#ps_car_14 - 42620
+ 
+#Checking if they are truly continous or ordinal
+for col in train_num:
+    print(train_num[col].value_counts())
+ 
+#ps_reg_03,ps_car_12,ps_car_13,ps_car_14 are purely continous
+# ps_car_15 - can be considered as ordinal
+#ps_reg_02 = ordinal value ranging 0,0.1,0.2,...,1.9
+#ps_reg_01,= ordinal value ranging 0,0.1,0.2,...,0.9
+    
+#calc variables
+#   no missing values
+#   this seems to be some kind of ratio as the maximum is 0.9
+#   all three _calc variables have very similar distributions
+    
+#Checking Correlation between numerical fields
+corMat=train_num.corr()
+sns.heatmap(corMat,annot=True)
+#Relation found among
+#ps_reg_01 and ps_reg_02 (0.47)
+#ps_reg_02 and ps_reg_03 (0.74)
+#ps_car_12 and ps_car13 (0.67)
+#ps_car_12 and ps_car14 (0.6)
+#ps_car_13 and ps_car14 (0.46)
+#ps_car_13 and ps_car15 (0.67)
+
+#Plotting relation between the pairs mentioned above
+#sampling from train dataset ignoring misisng values
+s = train[train>=0].sample(frac=0.1)
+def rel_lmplot(x,y,data=s):
+    sns.lmplot(x=x, y=y, data=data,hue='target', palette='Set1', 
+           scatter_kws={'alpha':0.3})
+    plt.show()
+
+rel_lmplot('ps_reg_01','ps_reg_02')#linear relation 
+rel_lmplot('ps_reg_02','ps_reg_03')
+rel_lmplot('ps_car_12','ps_car_13')
+rel_lmplot('ps_car_12','ps_car_14')
+rel_lmplot('ps_car_13','ps_car_14')
+rel_lmplot('ps_car_13','ps_car_15')
+
+#So how can we deal with correalted features??
+# We can perform PCA on variables to reduce the dimension.
+# But as number of correlated we ignore
+
+#Checking Outliers for numerical fields
+for col in range(len(train_num.columns)):
+    sns.boxplot(train_num.iloc[:,col])
+    plt.show()
+#or    
+sns.boxplot(data=train_num,orient="h")
+
+# 'ps_reg_01', No OutLier - range 0 to 1
+# 'ps_reg_02', Outliers on higher cap  
+# 'ps_reg_03', too many outliers            *
+# 'ps_car_11', outlier on lower cap   
+# 'ps_car_12', too many outliers            *
+# 'ps_car_13', too many outliers            *
+# 'ps_car_14', too many outliers            *
+# 'ps_car_15', outliers on lower cap
+# 'ps_cal_01', No OutLier - range 0 to 1
+# 'ps_cal_02', No OutLier - range 0 to 1
+# 'ps_cal_03'  No OutLier - range 0 to 1
+
+#Checking Counts on numerical 
+for col in range(len(train_num.columns)):
+    counts = train_num.iloc[:,col].value_counts()
+    print(counts)
+
+#Looks like only ps_reg_03,ps_car_12, ps_car_13, ps_car_14 are continous
+    #Rest all fields are ordinal
+    
+#creating another dataset for ordinal and continous fields
+train_float_ord=train_num.drop(['ps_reg_03','ps_car_12','ps_car_13','ps_car_14'],axis=1)
+train_num_continous=train_num.loc[:,('ps_reg_03','ps_car_12','ps_car_13','ps_car_14')]
+
+#ps_car_15 is special case which can be seen as continous as well as ordinal
+# we shall see it separately
+
+#Feaure Engineering
+#Float Ordinal Data analysis
+#Conducting Chi Sqr Test on float ordinals
+UDF_chiSqrTest(train_float_ord)
+train_float_ord=test_result
+
+# No of Columns Retained:  3
+# Columns Retained:
+#  Index(['ps_reg_01', 'ps_reg_02', 'ps_car_15'], dtype='object')
+# No of Columns Dropped:  3
+
+#Conducting ttest for float ordinal
+UDF_ttest(train_float_ord)
+#ps_cal_01 is insignificant
+
+
+#Visualising variable wrt proportion of cliamed insurance - ie target =1
+UDF_Barplot_variables_vs_target1(train_float_ord)
+#ps_reg_01,ps_reg_02 aand ps_car_15 shows there is assocaition with claimed insurance
+#ps_cal_01 shows no relation but it passed chisqr test, so lets keep it
+
+#Continous data
+train_num_continous.describe()
+#Conducting ttest for continous data
+UDF_ttest(train_num_continous)
+#each of the 4 variables are significant
+
+#Missing Value tratment
+train_num_continous.isnull().sum()
+train_num_continous=train_num_continous.fillna(train_num_continous.median())
+
+# =============================================================================    
+#Now Joining Continous and Ordinal columns so that later they can be normalized
+
+t_num_ord_final=pd.concat((train_num_continous,train_float_ord,train_ordinal),axis=1)
+t_num_ord_final.shape#12 columns
+
+#Now Joining Categorical  and Binary columns so that their datatype can be cahnged
+
+t_bin_cat_final=pd.concat((train_bin,train_cat_dummy),axis=1)
+t_bin_cat_final.shape#189 columns
+
+
+#Assigning features
+#Now Joining all features numerical and categorical and binary
+x=pd.concat((t_bin_cat_final,t_num_ord_final),axis=1)
+x.shape#201 columns
+
+df_engineered=pd.concat((x,train.target),axis=1)
+df_engineered.columns
+df_engineered['target'].value_counts()
+
+df_engineered.dtypes
+
+# number of zeros
+num_zeros = (df_engineered['target'] == 0).sum()
+# number of ones
+num_ones = (df_engineered['target'] == 1).sum()
+# difference in the number of zeros and ones
+diff = num_zeros - num_ones
+# ratios
+ones_to_zeros = num_ones / num_zeros
+zeros_to_ones = num_zeros / num_ones
+print('Ratio of ones to zeros: ', ones_to_zeros * 100, ' %')
+
+
+df_zeros = df_engineered[df_engineered['target'] == 0]
+df_zeros_sample = df_zeros.sample(n=int(len(train) / 2), random_state=42)
+df_zeros_sample.reset_index(inplace=True, drop=True)
+
+#Duplicating examples with a target of one
+#I will duplicate all of the examples corresponding to ones.
+df_ones = df_engineered[df_engineered['target'] == 1]
+# Adds duplicates of the ones set until half of the dataset is occupied
+df_ones_dup = pd.DataFrame()
+for i in range(int((len(train) / 2) / num_ones)):
+    df_ones_dup = df_ones_dup.append(df_ones)
+    
+df_rebalanced = pd.concat([df_zeros_sample, df_ones_dup])
+df_rebalanced = df_rebalanced.sample(frac=1).reset_index(drop=True)  
+
+
+from sklearn.preprocessing import MinMaxScaler
+
+df_scaled = df_rebalanced.copy()
+df_scaled.drop(columns=['target'], inplace=True)
+# Set up scaler and create a scaled input matrix
+scaler = MinMaxScaler()
+# MinMaxScalar outputs data as a numpy array (which is necessary for XGBoost)
+X_scaled = scaler.fit_transform(df_scaled)  
+X_scaled.shape  
+
+X = X_scaled
+# y needs to be converted to an array
+y = df_rebalanced['target'].as_matrix()
+# split up the data and target values
+
+# =============================================================================
+# Model Preparation
+# ============================================================================
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+
+models = []
+models.append(('LogisticRegression', LogisticRegression()))
+models.append(('XGBoost', XGBClassifier()))
+models.append(('RandomForest', RandomForestClassifier()))
+
+
+for name, model in models:
+    print('\n++++++++++++++ {} ++++++++++++++\n'.format(name))
+
+    # Train model
+    print('\n--- Training model using {} ---'.format(name))
+    model.fit(X_train, y_train)
+    print('=== DONE ===\n')
+    
+    # Save model
+    #joblib.dump(model, '{}_model_trained.pkl'.format(name))
+    
+    # Make predictions on the test-set
+    y_pred = model.predict(X_test)
+
+    # Classification report
+    report = classification_report(y_test, y_pred)
+    print('\n', report, '\n')
+    
+    # Classification report
+    print('Conf Matrix: \n', confusion_matrix(y_test,y_pred))
+    
+    print('======================================\n')
+
+
+# =============================================================================
+# ++++++++++++++ LogisticRegression ++++++++++++++
+# --- Training model using LogisticRegression ---
+#
+#                precision    recall  f1-score   support
+# 
+#            0       0.60      0.67      0.63     59438
+#            1       0.60      0.52      0.56     56488
+# 
+#    micro avg       0.60      0.60      0.60    115926
+#    macro avg       0.60      0.60      0.60    115926
+# weighted avg       0.60      0.60      0.60    115926
+#  
+# 
+# Conf Matrix: 
+#  [[39829 19609]
+#  [26958 29530]]
+# ======================================
+# ++++++++++++++ XGBoost ++++++++++++++
+# --- Training model using XGBoost --
+#                precision    recall  f1-score   support
+# 
+#            0       0.60      0.68      0.64     59438
+#            1       0.61      0.53      0.57     56488
+# 
+#    micro avg       0.61      0.61      0.61    115926
+#    macro avg       0.61      0.61      0.60    115926
+# weighted avg       0.61      0.61      0.61    115926
+#  
+# Conf Matrix: 
+#  [[40532 18906]
+#  [26561 29927]]
+# ======================================
+# ++++++++++++++ RandomForest ++++++++++++++
+# 
+# --- Training model using RandomForest ---
+# 
+#                precision    recall  f1-score   support
+# 
+#            0       1.00      1.00      1.00     59438
+#            1       0.99      1.00      1.00     56488
+# 
+#    micro avg       1.00      1.00      1.00    115926
+#    macro avg       1.00      1.00      1.00    115926
+# weighted avg       1.00      1.00      1.00    115926
+#  
+# 
+# Conf Matrix: 
+#  [[59146   292]
+#  [    0 56488]]
+# =============================================================================
+
+#Saving the best fit model 
+final_model=models[2][1]
+
+y_pred=final_model.predict(X_test)
+
+print(classification_report(y_test, y_pred))
+print(accuracy_score(y_test, y_pred))#99.74%
+
+#The final model has precision & accuracy of 99% and Recall of 100%
+#ie Out of all predicted claim less than 1% turn out to be false
+#With Recall of 100% model is succesfuly cover all the claimant, No miss
+
+
+
+#====================Final Submission ==========================================
+#Columns to be kept
+columns_to_be_kept_dataset=pd.concat((t_num_ord_final,train_bin,train_cat),axis=1)
+columns_to_be_kept=columns_to_be_kept_dataset.columns
+
+feats_to_keep = ['ps_reg_03', 'ps_car_12', 'ps_car_13', 'ps_car_14', 'ps_reg_01',
+       'ps_reg_02', 'ps_car_15', 'ps_ind_01', 'ps_ind_03', 'ps_ind_14',
+       'ps_ind_15', 'ps_car_11', 'ps_ind_06_bin', 'ps_ind_07_bin',
+       'ps_ind_08_bin', 'ps_ind_09_bin', 'ps_ind_12_bin', 'ps_ind_16_bin',
+       'ps_ind_17_bin', 'ps_ind_18_bin', 'ps_ind_02_cat', 'ps_ind_04_cat',
+       'ps_ind_05_cat', 'ps_car_01_cat', 'ps_car_02_cat', 'ps_car_03_cat',
+       'ps_car_04_cat', 'ps_car_05_cat', 'ps_car_06_cat', 'ps_car_07_cat',
+       'ps_car_08_cat', 'ps_car_09_cat', 'ps_car_11_cat']
+
+# create new dataframe with only selected features, target and id
+df_select_feats = test[['id'] + feats_to_keep]
+
+df_select_feats[test==-1].sum()
+
+# separate col names into categories
+num_feats_to_keep, cat_feats_to_keep, bin_feats_to_keep = [], [], []
+
+for col in feats_to_keep:
+    if col == 'id' or col == 'target':
+        pass
+    elif '_cat' in col:
+        cat_feats_to_keep.append(col)
+    elif '_bin' in col:
+        bin_feats_to_keep.append(col)
+    else:
+        num_feats_to_keep.append(col)
+        
+print('--- Numerical features --- : ', '\n', num_feats_to_keep, '\n')
+print('--- Categorical features --- : ', '\n', cat_feats_to_keep, '\n')
+print('--- Binary features --- : ', '\n', bin_feats_to_keep, '\n')
+
+df_engineered = df_select_feats.copy()
+
+df_engineered[cat_feats_to_keep].nunique()
+
+# convert cat feats to dummy variables (0s and 1s)
+cat_dummy_df = pd.get_dummies(df_engineered[cat_feats_to_keep].astype(str))
+# replacing original cat cols with new dummie cols
+df_engineered = pd.concat([df_engineered, cat_dummy_df], axis=1).drop(columns=cat_feats_to_keep)
+
+#replacing null values for numerical col
+df_engineered[df_engineered==-1]=np.nan 
+df_engineered=df_engineered.fillna(df_engineered.median())
+
+df_select_feats[df_engineered==-1].sum()
+df_engineered.shape
+df_engineered.columns
+
+df_engineered.dtypes
+df_engineered.columns
+df_engineered=df_engineered.drop(["id"],axis=1)
+
+# Set up scaler and create a scaled input matrix
+scaler = MinMaxScaler()
+# MinMaxScalar outputs data as a numpy array (which is necessary for XGBoost)
+test_features = scaler.fit_transform(df_engineered)  
+test_features[:,0]
+
+#Predicting test data from final Model
+test_predict_proba=final_model.predict_proba(test_features)
+df = pd.DataFrame(data=test_predict_proba)
+test_predict_proba=pd.concat((df,test.id),axis=1)
+#======================Project End=====================================
+
